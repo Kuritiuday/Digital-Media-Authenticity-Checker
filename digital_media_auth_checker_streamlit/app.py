@@ -1,4 +1,3 @@
-import cv2
 import streamlit as st
 import time
 import tempfile
@@ -9,13 +8,6 @@ import cv2
 from reportlab.pdfgen import canvas
 from datetime import datetime
 
-try:
-    import cv2
-except:
-    cv2 = None
-
-if cv2 is None:
-    st.warning("Video analysis not available in cloud deployment")
     
 
 st.set_page_config(page_title="Digital Media Authenticity Checker", layout="wide")
@@ -121,55 +113,35 @@ def generate_ela_image(image):
 def analyze_image(image):
 
     ela_image = generate_ela_image(image)
-    ela_array = np.array(ela_image)
-
-    ela_score = np.mean(ela_array)
 
     img_np = np.array(image)
 
-    gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
+    # convert to grayscale
+    gray = np.mean(img_np, axis=2)
 
-    # Noise analysis
-    noise_score = cv2.Laplacian(gray, cv2.CV_64F).var()
+    # noise estimate
+    noise_score = np.var(gray)
 
-    # Frequency analysis
-    f = np.fft.fft2(gray)
-    fshift = np.fft.fftshift(f)
-    magnitude = 20*np.log(np.abs(fshift)+1)
-    freq_score = np.mean(magnitude)
+    # edge density using gradient
+    gx, gy = np.gradient(gray)
+    edge_score = np.mean(np.sqrt(gx**2 + gy**2))
 
-    # Texture uniformity (AI images often too smooth)
-    texture_score = cv2.GaussianBlur(gray,(5,5),0).var()
+    ela_array = np.array(ela_image)
+    ela_score = np.mean(ela_array)
 
-    # Normalize
-    ela_norm = min(ela_score * 2, 100)
-    noise_norm = min(noise_score / 10, 100)
-    freq_norm = min(freq_score / 5, 100)
-    texture_norm = min(texture_score / 10, 100)
+    deepfake_score = int(min(100, (ela_score*0.4 + noise_score*0.01 + edge_score*0.2)))
 
-    # Combined forensic score
-    raw_score = (
-        ela_norm * 0.25 +
-        noise_norm * 0.25 +
-        freq_norm * 0.25 +
-        texture_norm * 0.25
-    )
-
-    deepfake_score = int(min(100, raw_score * 1.5))
-
-    # Boost fake detection
-    if deepfake_score > 45:
+    if deepfake_score > 40:
         deepfake_score = max(deepfake_score, 80)
 
     real_score = 100 - deepfake_score
 
-    status = "Deepfake / AI Generated Detected" if deepfake_score >= 40 else "Likely Authentic"
+    status = "Deepfake Detected" if deepfake_score >= 40 else "Deepfake Not Detected"
 
     result = {
         "ELA Score": int(ela_score),
         "Noise Score": int(noise_score),
-        "Frequency Score": int(freq_score),
-        "Texture Score": int(texture_score),
+        "Edge Score": int(edge_score),
         "Deepfake Probability (%)": deepfake_score,
         "Authenticity Score (%)": real_score,
         "Detection Result": status
