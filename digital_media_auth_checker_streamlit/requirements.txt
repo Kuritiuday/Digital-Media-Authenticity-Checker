@@ -1,6 +1,5 @@
 streamlit
-opencv-python
-pillow
 numpy
+pillow
+opencv-python-headless==4.9.0.80
 reportlab
-moviepy
