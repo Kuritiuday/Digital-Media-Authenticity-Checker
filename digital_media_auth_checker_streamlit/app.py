@@ -1,3 +1,4 @@
+import cv2
 import streamlit as st
 import time
 import tempfile
@@ -7,6 +8,15 @@ import numpy as np
 import cv2
 from reportlab.pdfgen import canvas
 from datetime import datetime
+
+try:
+    import cv2
+except:
+    cv2 = None
+
+if cv2 is None:
+    st.warning("Video analysis not available in cloud deployment")
+    
 
 st.set_page_config(page_title="Digital Media Authenticity Checker", layout="wide")
 
