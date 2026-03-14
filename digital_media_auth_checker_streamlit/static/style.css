@@ -1,0 +1,31 @@
+body{
+background-color:#050505;
+color:#00ffcc;
+font-family:monospace;
+}
+
+h1{
+text-align:center;
+font-size:45px;
+text-shadow:0 0 15px #00ffcc;
+animation: glow 2s infinite alternate;
+}
+
+@keyframes glow{
+
+from{ text-shadow:0 0 10px #00ffcc; }
+to{ text-shadow:0 0 30px #00ffcc; }
+
+}
+
+.stButton>button{
+background-color:#00ffcc;
+color:black;
+border:none;
+padding:10px 20px;
+border-radius:6px;
+}
+
+.stButton>button:hover{
+box-shadow:0 0 15px #00ffcc;
+}
